@@ -17,7 +17,7 @@ on:
           - apply
           - destroy
       confirmation:
-        description: Para destroy, digite destroy-infra-platform
+        description: Para destroy, digite destroy-infra-plataform
         required: false
         type: string
 
