@@ -12,7 +12,14 @@ on:
         required: true
         default: plan
         type: choice
-        options: [plan, apply]
+        options:
+          - plan
+          - apply
+          - destroy
+      confirmation:
+        description: Para destroy, digite destroy-infra-plataform
+        required: false
+        type: string
 
 concurrency:
   group: terraform-${{ vars.TF_STATE_KEY }}
