@@ -1,8 +1,12 @@
-# infra-platform
+# infra-plataform
 
 Produto responsável pelos serviços compartilhados instalados sobre o EKS.
 Consome o cluster publicado pelo `infra-cluster`; não cria VPC, EKS ou node
 groups.
+
+O produto e o repositório usam o nome canônico `infra-plataform`. A chave do
+state permanece `platform/dev/terraform.tfstate` como identificador legado;
+alterá-la exige uma migração explícita do backend.
 
 ## Estado inicial
 

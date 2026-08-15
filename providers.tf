@@ -3,10 +3,10 @@ provider "aws" {
 
   default_tags {
     tags = {
-      Project     = "infra-platform"
+      Project     = "infra-plataform"
       Environment = var.environment
       ManagedBy   = "terraform"
-      Repository  = "infra-platform"
+      Repository  = "infra-plataform"
     }
   }
 }

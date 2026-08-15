@@ -1,4 +1,4 @@
-# AGENTS.md — infra-platform
+# AGENTS.md — infra-plataform
 
 ## Responsabilidade
 
@@ -10,7 +10,7 @@ alterar recursos pertencentes a `infra-network` ou `infra-cluster`.
 - cluster: `infra-cluster`;
 - região: `us-east-1`;
 - ambiente: `dev`;
-- backend key: `platform/dev/terraform.tfstate`;
+- backend key legado: `platform/dev/terraform.tfstate`;
 - primeiro recurso: `helm_release.metrics_server`;
 - chart: repositório oficial do Kubernetes SIGs, versão `3.13.1`;
 - import ID: `kube-system/metrics-server`.
