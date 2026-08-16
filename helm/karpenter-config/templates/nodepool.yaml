@@ -1,0 +1,44 @@
+apiVersion: karpenter.sh/v1
+kind: NodePool
+metadata:
+  name: volatile
+spec:
+  template:
+    metadata:
+      labels:
+        workload-tier: volatile
+    spec:
+      nodeClassRef:
+        group: karpenter.k8s.aws
+        kind: EC2NodeClass
+        name: volatile
+      taints:
+        - key: workload-tier
+          value: volatile
+          effect: NoSchedule
+      requirements:
+        - key: kubernetes.io/arch
+          operator: In
+          values: ["amd64"]
+        - key: kubernetes.io/os
+          operator: In
+          values: ["linux"]
+        - key: karpenter.sh/capacity-type
+          operator: In
+          values: ["spot"]
+        - key: node.kubernetes.io/instance-type
+          operator: In
+          values:
+{{ range .Values.spotInstanceTypes }}
+            - {{ . | quote }}
+{{ end }}
+      expireAfter: 720h
+      terminationGracePeriod: 1h
+  limits:
+    cpu: {{ .Values.nodePoolCpuLimit | quote }}
+    memory: {{ .Values.nodePoolMemoryLimit | quote }}
+  disruption:
+    consolidationPolicy: WhenEmptyOrUnderutilized
+    consolidateAfter: 5m
+    budgets:
+      - nodes: "10%"

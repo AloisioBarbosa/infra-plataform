@@ -15,6 +15,20 @@ state sem desinstalar o release existente. A configuração usa o chart oficial
 `metrics-server/metrics-server` `3.13.1` e a imagem mantida em
 `registry.k8s.io`.
 
+## Compute híbrido
+
+Os controllers críticos compatíveis executam em EKS Fargate. O Metrics Server
+usa porta `10251`, duas réplicas e PodDisruptionBudget. O controller do
+Karpenter executa no namespace `karpenter` com IRSA.
+
+O NodePool `volatile` provisiona somente Spot nos tipos `t3.medium`,
+`t3.large`, `t3a.medium` e `t3a.large`. Ele possui o taint
+`workload-tier=volatile:NoSchedule`; apenas aplicações com toleration
+explícita podem consumir essa capacidade.
+
+O Managed Node Group permanece disponível como fallback. A chave de state
+legada continua `platform/dev/terraform.tfstate`.
+
 ## Ordem da migração
 
 1. Aplicar a PR correspondente no `infra-cluster`. O bloco `removed` com
@@ -49,6 +63,6 @@ terraform plan
 ## Roadmap
 
 - migrar `kube-state-metrics` pelo mesmo padrão não destrutivo;
-- instalar Ingress Controller, ExternalDNS, Cert-Manager, Argo CD e Karpenter;
+- instalar Ingress Controller, ExternalDNS, Cert-Manager e Argo CD;
 - substituir credenciais estáticas do CI por uma role OIDC exclusiva;
 - adicionar políticas, testes e runbooks por componente.

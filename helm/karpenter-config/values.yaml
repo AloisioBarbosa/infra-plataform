@@ -1,0 +1,8 @@
+clusterName: ""
+instanceProfile: ""
+amiAlias: ""
+subnetIds: []
+securityGroupId: ""
+spotInstanceTypes: []
+nodePoolCpuLimit: "20"
+nodePoolMemoryLimit: "80Gi"
