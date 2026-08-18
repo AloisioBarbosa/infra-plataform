@@ -35,13 +35,16 @@ env:
   TF_VAR_region: ${{ vars.TF_VAR_REGION }}
   TF_VAR_cluster_name: ${{ vars.TF_VAR_CLUSTER_NAME }}
   TF_VAR_environment: ${{ vars.TF_VAR_ENVIRONMENT }}
+  TF_VAR_karpenter_controller_role_arn: ${{ vars.KARPENTER_CONTROLLER_ROLE_ARN }}
+  TF_VAR_karpenter_interruption_queue_name: ${{ vars.KARPENTER_INTERRUPTION_QUEUE_NAME }}
+  TF_VAR_karpenter_node_instance_profile_name: ${{ vars.KARPENTER_NODE_INSTANCE_PROFILE_NAME }}
 
 jobs:
   validate:
     name: Validate
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: hashicorp/setup-terraform@v4
         with:
           terraform_version: ${{ env.TF_VERSION }}
@@ -67,7 +70,7 @@ jobs:
       contents: read
       security-events: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Scan Terraform
         uses: aquasecurity/trivy-action@v0.36.0
         with:
@@ -91,18 +94,19 @@ jobs:
     environment: plan
     permissions:
       contents: read
+      id-token: write
       pull-requests: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: hashicorp/setup-terraform@v4
         with:
           terraform_version: ${{ env.TF_VERSION }}
       - name: Configurar credenciais AWS
-        uses: aws-actions/configure-aws-credentials@v4
+        uses: aws-actions/configure-aws-credentials@v5
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
           aws-region: ${{ vars.AWS_REGION }}
+          role-session-name: infra-plataform-${{ github.run_id }}-plan
       - name: Terraform init
         run: |
           terraform init -reconfigure \
@@ -121,8 +125,9 @@ jobs:
           exit 0
       - name: Comentar plan na PR
         if: github.event_name == 'pull_request'
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9
         with:
+          retries: 3
           script: |
             const fs = require('fs');
             const plan = fs.readFileSync('plan.txt', 'utf8');
@@ -146,17 +151,18 @@ jobs:
     environment: production
     permissions:
       contents: read
+      id-token: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: hashicorp/setup-terraform@v4
         with:
           terraform_version: ${{ env.TF_VERSION }}
       - name: Configurar credenciais AWS
-        uses: aws-actions/configure-aws-credentials@v4
+        uses: aws-actions/configure-aws-credentials@v5
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
           aws-region: ${{ vars.AWS_REGION }}
+          role-session-name: infra-plataform-${{ github.run_id }}-apply
       - name: Terraform init
         run: |
           terraform init -reconfigure \
@@ -177,26 +183,27 @@ jobs:
     environment: plan
     permissions:
       contents: read
+      id-token: write
     env:
       DESTROY_CONFIRMATION: ${{ inputs.confirmation }}
     steps:
       - name: Validar confirmacao
         shell: bash
         run: |
-          if [[ "$DESTROY_CONFIRMATION" != "destroy-infra-platform" ]]; then
-            echo "Confirmacao invalida. Digite destroy-infra-platform."
+          if [[ "$DESTROY_CONFIRMATION" != "destroy-infra-plataform" ]]; then
+            echo "Confirmacao invalida. Digite destroy-infra-plataform."
             exit 1
           fi
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: hashicorp/setup-terraform@v4
         with:
           terraform_version: ${{ env.TF_VERSION }}
       - name: Configurar credenciais AWS
-        uses: aws-actions/configure-aws-credentials@v4
+        uses: aws-actions/configure-aws-credentials@v5
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
           aws-region: ${{ vars.AWS_REGION }}
+          role-session-name: infra-plataform-${{ github.run_id }}-destroy-plan
       - name: Terraform init
         run: |
           terraform init -reconfigure \
@@ -211,7 +218,7 @@ jobs:
       - name: Armazenar plano revisavel
         uses: actions/upload-artifact@v4
         with:
-          name: infra-platform-destroy-plan
+          name: infra-plataform-destroy-plan
           path: destroy.tfplan
           retention-days: 1
 
@@ -222,17 +229,18 @@ jobs:
     environment: production
     permissions:
       contents: read
+      id-token: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: hashicorp/setup-terraform@v4
         with:
           terraform_version: ${{ env.TF_VERSION }}
       - name: Configurar credenciais AWS
-        uses: aws-actions/configure-aws-credentials@v4
+        uses: aws-actions/configure-aws-credentials@v5
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
           aws-region: ${{ vars.AWS_REGION }}
+          role-session-name: infra-plataform-${{ github.run_id }}-destroy-apply
       - name: Terraform init
         run: |
           terraform init -reconfigure \
@@ -243,6 +251,6 @@ jobs:
       - name: Baixar plano aprovado
         uses: actions/download-artifact@v4
         with:
-          name: infra-platform-destroy-plan
+          name: infra-plataform-destroy-plan
       - name: Aplicar destruicao aprovada
         run: terraform apply -auto-approve destroy.tfplan

@@ -1,0 +1,30 @@
+apiVersion: karpenter.k8s.aws/v1
+kind: EC2NodeClass
+metadata:
+  name: volatile
+spec:
+  amiFamily: AL2023
+  amiSelectorTerms:
+    - alias: {{ required "amiAlias e obrigatorio" .Values.amiAlias | quote }}
+  instanceProfile: {{ required "instanceProfile e obrigatorio" .Values.instanceProfile | quote }}
+  subnetSelectorTerms:
+{{ range .Values.subnetIds }}
+    - id: {{ . | quote }}
+{{ end }}
+  securityGroupSelectorTerms:
+    - id: {{ required "securityGroupId e obrigatorio" .Values.securityGroupId | quote }}
+  metadataOptions:
+    httpEndpoint: enabled
+    httpProtocolIPv6: disabled
+    httpPutResponseHopLimit: 1
+    httpTokens: required
+  blockDeviceMappings:
+    - deviceName: /dev/xvda
+      ebs:
+        deleteOnTermination: true
+        encrypted: true
+        volumeSize: 20Gi
+        volumeType: gp3
+  tags:
+    Name: {{ printf "%s-karpenter-volatile" .Values.clusterName | quote }}
+    workload-tier: volatile
