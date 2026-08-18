@@ -13,7 +13,8 @@ alterar recursos pertencentes a `infra-network` ou `infra-cluster`.
 - backend key legado: `platform/dev/terraform.tfstate`;
 - primeiro recurso: `helm_release.metrics_server`;
 - chart: repositório oficial do Kubernetes SIGs, versão `3.13.1`;
-- import ID: `kube-system/metrics-server`.
+- o release `kube-system/metrics-server` estava ausente após a recriação do
+  cluster e será criado por este state;
 - compute crítico: EKS Fargate para Karpenter, CoreDNS e Metrics Server;
 - Karpenter: chart `1.14.0`, AMI `al2023@v20260810`;
 - NodePool `volatile`: Spot-only, taint `workload-tier=volatile:NoSchedule`;
@@ -22,9 +23,10 @@ alterar recursos pertencentes a `infra-network` ou `infra-cluster`.
 
 ## Guardrail de migração
 
-O apply só pode ocorrer depois que o `infra-cluster` aplicar seu bloco
-`removed { destroy = false }`. O import declarativo assume o release existente;
-não remova o import nem altere o nome/namespace antes do primeiro apply verde.
+O `infra-cluster` já aplicou seu bloco `removed { destroy = false }`. O plan do
+PR #3 confirmou `release not found`, portanto não existe release para importar.
+Mantenha o nome `metrics-server`, o namespace `kube-system` e a versão do chart
+durante o primeiro apply verde deste state.
 
 ## CI
 

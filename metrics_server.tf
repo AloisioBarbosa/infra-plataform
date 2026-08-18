@@ -43,9 +43,3 @@ resource "helm_release" "metrics_server" {
     })
   ]
 }
-
-# Assume o release preservado pelo bloco removed do infra-cluster.
-import {
-  to = helm_release.metrics_server
-  id = "kube-system/metrics-server"
-}
