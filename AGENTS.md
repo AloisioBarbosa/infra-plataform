@@ -28,8 +28,10 @@ não remova o import nem altere o nome/namespace antes do primeiro apply verde.
 
 ## CI
 
-O workflow usa temporariamente `AWS_ACCESS_KEY_ID` e
-`AWS_SECRET_ACCESS_KEY`. OIDC permanece como melhoria prioritária.
+O workflow assume `GitHubActionsOIDCInfraPlataformRole` via GitHub Actions
+OIDC nos environments `plan` e `production`. Não reintroduza chaves AWS de
+longa duração. O `infra-bootstrap` publica a role e o `infra-cluster` gerencia
+seu EKS Access Entry com `AmazonEKSClusterAdminPolicy`.
 
 O `infra-cluster` publica a role IRSA do controller, a fila SQS de
 interrupções e o instance profile dos nodes. Não recrie esses recursos neste

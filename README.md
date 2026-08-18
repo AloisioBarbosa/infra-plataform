@@ -48,6 +48,10 @@ legada continua `platform/dev/terraform.tfstate`.
 Nunca aplique este repositório antes de concluir o handoff do state no
 `infra-cluster`.
 
+O pipeline assume `GitHubActionsOIDCInfraPlataformRole` via OIDC. O
+`infra-bootstrap` publica a role e o `infra-cluster` publica sua autorização
+Kubernetes por EKS Access Entry; ambos precisam estar aplicados antes do plan.
+
 ## Uso local
 
 ```bash
@@ -64,5 +68,4 @@ terraform plan
 
 - migrar `kube-state-metrics` pelo mesmo padrão não destrutivo;
 - instalar Ingress Controller, ExternalDNS, Cert-Manager e Argo CD;
-- substituir credenciais estáticas do CI por uma role OIDC exclusiva;
 - adicionar políticas, testes e runbooks por componente.
